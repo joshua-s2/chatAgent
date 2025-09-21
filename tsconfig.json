@@ -1,0 +1,11 @@
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+    "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "types": ["@nuxt/types", "node"],
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "allowSyntheticDefaultImports": true
+  }
+}
