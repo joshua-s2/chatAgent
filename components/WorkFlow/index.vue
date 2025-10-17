@@ -53,6 +53,7 @@ const loading = ref(false);
 const message = ref("");
 
 const { $snackbar } = useNuxtApp();
+const router = useRouter();
 const config = useRuntimeConfig();
 const API_BASE = config.public.apiBase;
 
@@ -74,7 +75,7 @@ const saveWorkflow = async () => {
     if (res.ok) {
       const data = await res.json();
       $snackbar.show(`Workflow "${data.name}" saved successfully!`);
-
+      router.push("/chat");
       workflowName.value = "";
       policyText.value = "";
       escalationEnabled.value = false;
