@@ -110,7 +110,7 @@ const onSubmit = async (values: any) => {
 
     if (res.ok) {
       const data = await res.json();
-      $snackbar.show(`Workflow "${data.name}" saved successfully!`);
+      $snackbar.show(`Workflow "${data.workflow.name}" saved successfully!`);
       router.push("/chat");
     } else {
       const errText = await res.text();
