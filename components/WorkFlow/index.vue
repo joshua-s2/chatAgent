@@ -8,56 +8,96 @@
       </CardHeader>
 
       <CardContent class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Workflow Name</label>
-          <Input v-model="workflowName" placeholder="e.g. Refund Policy" />
-        </div>
+        <Form
+          :validation-schema="schema"
+          :initial-values="initialValues"
+          @submit="onSubmit"
+        >
+          <div>
+            <label class="block text-sm font-medium mb-1">Workflow Name</label>
+            <Field name="name" v-slot="{ field, errorMessage }">
+              <Input v-bind="field" placeholder="e.g. Refund Policy" />
+              <p v-if="errorMessage" class="text-red-500 text-xs mt-1">
+                {{ errorMessage }}
+              </p>
+            </Field>
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-1"
-            >Policy / Instructions</label
-          >
-          <Textarea
-            v-model="policyText"
-            placeholder="Describe how the AI should handle this workflow..."
-            class="min-h-[120px]"
-          />
-        </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">
+              Policy / Instructions
+            </label>
+            <Field name="policy" v-slot="{ field, errorMessage }">
+              <Textarea
+                v-bind="field"
+                placeholder="Describe how the AI should handle this workflow..."
+                class="min-h-[120px]"
+              />
+              <p v-if="errorMessage" class="text-red-500 text-xs mt-1">
+                {{ errorMessage }}
+              </p>
+            </Field>
+          </div>
 
-        <div class="flex items-center justify-between">
-          <span class="text-sm font-medium">Enable Escalation</span>
-          <Switch v-model="escalationEnabled" />
-        </div>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium">Enable Escalation</label>
+            <Field name="escalation" v-slot="{ field }">
+              <Switch v-model="field.value" />
+            </Field>
+          </div>
 
-        <p v-if="message" class="text-sm text-gray-700">{{ message }}</p>
+          <p v-if="message" class="text-sm text-gray-700 mt-2">{{ message }}</p>
+
+          <Button class="w-full mt-4" :disabled="loading" type="submit">
+            {{ loading ? "Saving..." : "Save Workflow" }}
+          </Button>
+        </Form>
       </CardContent>
-
-      <CardFooter>
-        <Button class="w-full" :disabled="loading" @click="saveWorkflow">
-          {{ loading ? "Saving..." : "Save Workflow" }}
-        </Button>
-      </CardFooter>
     </Card>
 
     <div class="my-4 justify-start">
-      <NuxtLink to="/chat" class="hover:underline"> Chat with agent </NuxtLink>
+      <NuxtLink to="/chat" class="hover:underline">Chat with agent</NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const workflowName = ref("");
-const policyText = ref("");
-const escalationEnabled = ref(false);
-const loading = ref(false);
-const message = ref("");
+import { ref } from "vue";
+import { Form, Field } from "vee-validate";
+import { z } from "zod";
+import { toTypedSchema } from "@vee-validate/zod";
 
 const { $snackbar } = useNuxtApp();
 const router = useRouter();
 const config = useRuntimeConfig();
 const API_BASE = config.public.apiBase;
 
-const saveWorkflow = async () => {
+const loading = ref(false);
+const message = ref("");
+
+const schema = toTypedSchema(
+  z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Workflow name is required")
+      .max(100, "Workflow name is too long"),
+    policy: z
+      .string()
+      .trim()
+      .min(1, "Policy instructions are required")
+      .max(5000, "Policy text is too long"),
+    escalation: z.boolean().optional(),
+  })
+);
+
+const initialValues = {
+  name: "",
+  policy: "",
+  escalation: false,
+};
+
+const onSubmit = async (values: any) => {
   loading.value = true;
   message.value = "";
 
@@ -65,22 +105,16 @@ const saveWorkflow = async () => {
     const res = await fetch(`${API_BASE}/api/workflow`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: workflowName.value,
-        policy: policyText.value,
-        escalation: escalationEnabled.value,
-      }),
+      body: JSON.stringify(values),
     });
 
     if (res.ok) {
       const data = await res.json();
       $snackbar.show(`Workflow "${data.name}" saved successfully!`);
       router.push("/chat");
-      workflowName.value = "";
-      policyText.value = "";
-      escalationEnabled.value = false;
     } else {
-      $snackbar.error("Failed to save workflow.");
+      const errText = await res.text();
+      $snackbar.error(`Failed to save workflow: ${errText}`);
     }
   } catch (err) {
     $snackbar.error(String(err));
