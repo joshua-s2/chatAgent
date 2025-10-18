@@ -23,7 +23,7 @@
             </Field>
           </div>
 
-          <div>
+          <div class="my-5">
             <label class="block text-sm font-medium mb-1">
               Policy / Instructions
             </label>
@@ -41,8 +41,8 @@
 
           <div class="flex items-center justify-between">
             <label class="text-sm font-medium">Enable Escalation</label>
-            <Field name="escalation" v-slot="{ field }">
-              <Switch v-model="field.value" />
+            <Field name="escalation" v-slot="{ value, handleChange }">
+              <Switch :checked="value" @update:checked="handleChange" />
             </Field>
           </div>
 
