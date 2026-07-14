@@ -4,8 +4,8 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "types": ["@nuxt/types", "node"],
-    "moduleResolution": "node",
-    "module": "ESNext",
+    "moduleResolution": "node16",
+    "module": "Node16",
     "allowSyntheticDefaultImports": true
   }
 }
